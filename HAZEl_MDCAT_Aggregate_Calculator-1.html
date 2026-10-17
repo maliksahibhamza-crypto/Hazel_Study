@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#123b72" />
+  <title>HAZEl MDCAT Aggregate Calculator</title>
+  <style>
+    :root {
+      --navy: #123b72;
+      --blue: #2463a6;
+      --blue-soft: #edf4fd;
+      --gold: #d5ad42;
+      --gold-soft: #fff7df;
+      --ink: #17263b;
+      --muted: #66758a;
+      --line: #dce5f0;
+      --surface: #ffffff;
+      --page: #f4f7fb;
+      --success: #16794b;
+      --danger: #b42318;
+      --shadow: 0 18px 50px rgba(18, 59, 114, .10);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top right, #e4eefc 0, transparent 35%), var(--page);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 24px 14px 34px;
+    }
+    .shell { width: 100%; max-width: 760px; margin: 0 auto; }
+    .brand {
+      display: flex; align-items: center; gap: 12px; margin: 0 0 18px;
+    }
+    .brand-mark {
+      display: grid; place-items: center; width: 48px; height: 48px;
+      border-radius: 15px; background: var(--navy); color: #fff;
+      font-weight: 850; font-size: 18px; letter-spacing: -1px;
+      box-shadow: 0 8px 20px rgba(18,59,114,.2);
+    }
+    .brand-name { font-size: 19px; font-weight: 850; letter-spacing: -.5px; color: var(--navy); }
+    .brand-name span { color: var(--gold); }
+    .brand-sub { margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .hero {
+      background: linear-gradient(135deg, #123b72, #2463a6);
+      border-radius: 24px; padding: 27px 24px; color: #fff;
+      position: relative; overflow: hidden; box-shadow: var(--shadow);
+    }
+    .hero::after {
+      content: "%"; position: absolute; right: 22px; top: -28px;
+      font-size: 150px; line-height: 1; font-weight: 900;
+      color: rgba(255,255,255,.07); pointer-events: none;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 7px;
+      color: #ffdf83; font-size: 11px; font-weight: 800;
+      letter-spacing: 1.5px; text-transform: uppercase;
+    }
+    h1 { margin: 10px 0 8px; font-size: clamp(25px, 6vw, 34px); line-height: 1.15; letter-spacing: -1px; }
+    .hero p { margin: 0; max-width: 520px; color: #e5eefb; line-height: 1.55; font-size: 14px; }
+    .formula-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 19px; }
+    .pill {
+      padding: 7px 11px; border-radius: 999px; font-size: 12px; font-weight: 750;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+    }
+    .card {
+      background: var(--surface); border: 1px solid var(--line); border-radius: 22px;
+      padding: 22px; margin-top: 18px; box-shadow: var(--shadow);
+    }
+    .section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 17px; }
+    h2 { margin: 0; font-size: 18px; letter-spacing: -.3px; }
+    .section-desc { margin: 5px 0 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .weight {
+      background: var(--gold-soft); color: #785600; border: 1px solid #f0dfa8;
+      border-radius: 10px; padding: 6px 9px; font-weight: 850; font-size: 12px; white-space: nowrap;
+    }
+    .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .field label { display: block; font-size: 12px; color: #42536b; font-weight: 750; margin: 0 0 7px; }
+    .input-wrap { position: relative; }
+    input {
+      display: block; width: 100%; border: 1.5px solid #d7e1ed; background: #fbfdff;
+      border-radius: 12px; padding: 13px 12px; color: var(--ink); font-size: 16px;
+      font-weight: 700; outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(36,99,166,.12); }
+    input.invalid { border-color: var(--danger); }
+    .hint { margin-top: 6px; font-size: 11px; color: #78869a; }
+    .error { display: none; margin-top: 8px; color: var(--danger); font-size: 12px; line-height: 1.4; }
+    .error.show { display: block; }
+    .actions { display: flex; gap: 10px; margin-top: 20px; }
+    button {
+      border: 0; border-radius: 13px; padding: 14px 17px; font: inherit;
+      font-weight: 800; cursor: pointer; transition: transform .15s, opacity .15s;
+    }
+    button:active { transform: scale(.98); }
+    .primary { flex: 1; background: var(--gold); color: #17263b; box-shadow: 0 8px 18px rgba(213,173,66,.23); }
+    .secondary { background: #edf2f8; color: #31445e; }
+    .result { display: none; }
+    .result.show { display: block; animation: rise .35s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .result-top {
+      border-radius: 18px; padding: 22px; color: white;
+      background: linear-gradient(135deg, #123b72, #1d568f);
+      display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    }
+    .result-label { font-size: 12px; color: #dce9fb; font-weight: 700; }
+    .result-number { margin-top: 4px; font-size: clamp(36px, 10vw, 48px); font-weight: 900; line-height: 1; letter-spacing: -1.5px; }
+    .result-number small { font-size: 20px; letter-spacing: 0; }
+    .result-note { margin-top: 9px; color: #dce9fb; font-size: 12px; }
+    .result-icon { font-size: 38px; background: rgba(255,255,255,.12); border-radius: 16px; padding: 12px; }
+    .breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 13px; }
+    .break-item { padding: 13px 11px; border-radius: 14px; background: #f6f9fd; border: 1px solid var(--line); min-width: 0; }
+    .break-title { font-size: 11px; color: var(--muted); font-weight: 750; }
+    .break-value { margin-top: 6px; font-size: 18px; font-weight: 850; color: var(--navy); }
+    .break-weight { margin-top: 3px; font-size: 10px; color: #7a8799; }
+    .bar-list { margin-top: 17px; display: grid; gap: 13px; }
+    .bar-head { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; font-weight: 750; margin-bottom: 6px; }
+    .bar-head span:last-child { color: var(--muted); }
+    .track { height: 8px; background: #eaf0f7; border-radius: 99px; overflow: hidden; }
+    .fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--gold)); border-radius: inherit; transition: width .5s ease; }
+    .notice { margin-top: 16px; border-left: 3px solid var(--gold); background: #fff9e8; padding: 11px 13px; border-radius: 0 10px 10px 0; color: #675324; font-size: 11px; line-height: 1.55; }
+    .footer { text-align: center; color: #8290a3; font-size: 11px; margin-top: 20px; line-height: 1.6; }
+    .footer strong { color: var(--navy); }
+    @media (max-width: 520px) {
+      body { padding: 17px 11px 26px; }
+      .hero { padding: 23px 19px; border-radius: 20px; }
+      .card { padding: 17px; border-radius: 18px; }
+      .fields { gap: 11px; }
+      input { padding: 12px 10px; font-size: 15px; }
+      .breakdown { gap: 7px; }
+      .break-item { padding: 11px 8px; }
+      .break-value { font-size: 16px; }
+      .result-top { padding: 18px; }
+      .result-icon { font-size: 28px; padding: 9px; }
+    }
+    @media (max-width: 360px) {
+      .fields { grid-template-columns: 1fr; }
+      .breakdown { grid-template-columns: 1fr; }
+      .actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="brand">
+      <div class="brand-mark" aria-label="Graduation cap">🎓</div>
+      <div>
+        <div class="brand-name">HAZEl <span>Study Hub</span></div>
+        <div class="brand-sub">Board + MDCAT preparation tools</div>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">✦ Admission planning tool</div>
+      <h1>MDCAT Aggregate<br>Calculator</h1>
+      <p>Apne Matric, Intermediate aur MDCAT marks enter karein aur apna weighted admission aggregate calculate karein.</p>
+      <div class="formula-pills">
+        <span class="pill">Matric · 10%</span>
+        <span class="pill">Intermediate · 40%</span>
+        <span class="pill">MDCAT · 50%</span>
+      </div>
+    </section>
+
+    <form id="aggregateForm" novalidate>
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <h2>01. Matric / SSC</h2>
+            <p class="section-desc">Apne obtained aur total marks enter karein.</p>
+          </div>
+          <span class="weight">10% weight</span>
+        </div>
+        <div class="fields">
+          <div class="field">
+            <label for="matricObtained">Obtained marks</label>
+            <input id="matricObtained" type="number" inputmode="decimal" min="0" step="any" placeholder="e.g. 888" required />
+          </div>
+          <div class="field">
+            <label for="matricTotal">Maximum marks</label>
+            <input id="matricTotal" type="number" inputmode="decimal" min="1" step="any" placeholder="e.g. 1100" required />
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <h2>02. Intermediate / HSSC</h2>
+            <p class="section-desc">Part 1 + Part 2 ka applicable total use karein.</p>
+          </div>
+          <span class="weight">40% weight</span>
+        </div>
+        <div class="fields">
+          <div class="field">
+            <label for="interObtained">Obtained marks</label>
+            <input id="interObtained" type="number" inputmode="decimal" min="0" step="any" placeholder="e.g. 950" required />
+          </div>
+          <div class="field">
+            <label for="interTotal">Maximum marks</label>
+            <input id="interTotal" type="number" inputmode="decimal" min="1" step="any" placeholder="e.g. 1100" required />
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <h2>03. MDCAT</h2>
+            <p class="section-desc">Apne test ke obtained aur maximum marks enter karein.</p>
+          </div>
+          <span class="weight">50% weight</span>
+        </div>
+        <div class="fields">
+          <div class="field">
+            <label for="mdcatObtained">Obtained marks</label>
+            <input id="mdcatObtained" type="number" inputmode="decimal" min="0" step="any" placeholder="e.g. 165" required />
+          </div>
+          <div class="field">
+            <label for="mdcatTotal">Maximum marks</label>
+            <input id="mdcatTotal" type="number" inputmode="decimal" min="1" step="any" placeholder="e.g. 180" required />
+          </div>
+        </div>
+        <div id="formError" class="error" role="alert" aria-live="polite"></div>
+        <div class="actions">
+          <button class="primary" type="submit">Calculate Aggregate <span aria-hidden="true">→</span></button>
+          <button class="secondary" type="reset">Reset</button>
+        </div>
+      </section>
+    </form>
+
+    <section id="result" class="card result" aria-live="polite">
+      <div class="section-head">
+        <div>
+          <h2>Your Aggregate Result</h2>
+          <p class="section-desc">Weighted contribution from all three components.</p>
+        </div>
+      </div>
+      <div class="result-top">
+        <div>
+          <div class="result-label">TOTAL AGGREGATE</div>
+          <div class="result-number"><span id="aggregateValue">0.00</span><small>%</small></div>
+          <div class="result-note">Out of a possible 100%</div>
+        </div>
+        <div class="result-icon" aria-hidden="true">🎓</div>
+      </div>
+      <div class="breakdown">
+        <div class="break-item">
+          <div class="break-title">Matric contribution</div>
+          <div class="break-value"><span id="matricContribution">0.00</span>%</div>
+          <div class="break-weight">Weighted at 10%</div>
+        </div>
+        <div class="break-item">
+          <div class="break-title">Inter contribution</div>
+          <div class="break-value"><span id="interContribution">0.00</span>%</div>
+          <div class="break-weight">Weighted at 40%</div>
+        </div>
+        <div class="break-item">
+          <div class="break-title">MDCAT contribution</div>
+          <div class="break-value"><span id="mdcatContribution">0.00</span>%</div>
+          <div class="break-weight">Weighted at 50%</div>
+        </div>
+      </div>
+      <div class="bar-list">
+        <div>
+          <div class="bar-head"><span>Matric performance</span><span id="matricPercent">0.00%</span></div>
+          <div class="track"><div id="matricBar" class="fill"></div></div>
+        </div>
+        <div>
+          <div class="bar-head"><span>Intermediate performance</span><span id="interPercent">0.00%</span></div>
+          <div class="track"><div id="interBar" class="fill"></div></div>
+        </div>
+        <div>
+          <div class="bar-head"><span>MDCAT performance</span><span id="mdcatPercent">0.00%</span></div>
+          <div class="track"><div id="mdcatBar" class="fill"></div></div>
+        </div>
+      </div>
+      <div class="notice">
+        <strong>Important:</strong> Yeh calculator aapke diye gaye 10% Matric + 40% Intermediate + 50% MDCAT formula par based hai. Actual admission policy university, province aur admission year ke mutabiq different ho sakti hai. Official prospectus zaroor check karein.
+      </div>
+      <div class="actions">
+        <button id="editButton" class="primary" type="button">Edit marks</button>
+        <button id="copyButton" class="secondary" type="button">Copy result</button>
+      </div>
+      <div id="copyStatus" class="section-desc" style="margin-top:10px" aria-live="polite"></div>
+    </section>
+
+    <footer class="footer">
+      Made for <strong>HAZEl Study Hub</strong><br>
+      Your preparation, one step at a time.
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const form = document.getElementById('aggregateForm');
+      const result = document.getElementById('result');
+      const errorBox = document.getElementById('formError');
+      const fields = [
+        { key: 'matric', obtained: 'matricObtained', total: 'matricTotal', weight: 0.10 },
+        { key: 'inter', obtained: 'interObtained', total: 'interTotal', weight: 0.40 },
+        { key: 'mdcat', obtained: 'mdcatObtained', total: 'mdcatTotal', weight: 0.50 }
+      ];
+      let lastSummary = '';
+
+      const fmt = value => value.toFixed(2);
+      const getValue = id => Number(document.getElementById(id).value);
+
+      function clearErrors() {
+        errorBox.textContent = '';
+        errorBox.classList.remove('show');
+        fields.forEach(field => {
+          document.getElementById(field.obtained).classList.remove('invalid');
+          document.getElementById(field.total).classList.remove('invalid');
+        });
+      }
+
+      function showError(message, ids = []) {
+        errorBox.textContent = message;
+        errorBox.classList.add('show');
+        ids.forEach(id => document.getElementById(id).classList.add('invalid'));
+      }
+
+      form.addEventListener('submit', event => {
+        event.preventDefault();
+        clearErrors();
+
+        const values = {};
+        const invalidIds = [];
+
+        for (const field of fields) {
+          const obtainedInput = document.getElementById(field.obtained);
+          const totalInput = document.getElementById(field.total);
+          const obtained = getValue(field.obtained);
+          const total = getValue(field.total);
+
+          if (obtainedInput.value.trim() === '' || totalInput.value.trim() === '' ||
+              !Number.isFinite(obtained) || !Number.isFinite(total) ||
+              total <= 0 || obtained < 0 || obtained > total) {
+            invalidIds.push(field.obtained, field.total);
+          } else {
+            values[field.key] = { obtained, total, percent: obtained / total * 100,
+              contribution: obtained / total * field.weight * 100 };
+          }
+        }
+
+        if (invalidIds.length) {
+          showError('Har field mein valid marks enter karein. Obtained marks 0 se maximum marks tak hone chahiye, aur maximum marks 0 se zyada hon.', invalidIds);
+          return;
+        }
+
+        const aggregate = fields.reduce((sum, field) => sum + values[field.key].contribution, 0);
+        document.getElementById('aggregateValue').textContent = fmt(aggregate);
+
+        for (const field of fields) {
+          const item = values[field.key];
+          document.getElementById(field.key + 'Contribution').textContent = fmt(item.contribution);
+          document.getElementById(field.key + 'Percent').textContent = fmt(item.percent) + '%';
+          document.getElementById(field.key + 'Bar').style.width = Math.min(100, item.percent) + '%';
+        }
+
+        lastSummary = [
+          'HAZEl Study Hub — MDCAT Aggregate Result',
+          'Matric: ' + values.matric.obtained + '/' + values.matric.total + ' | Contribution: ' + fmt(values.matric.contribution) + '%',
+          'Intermediate: ' + values.inter.obtained + '/' + values.inter.total + ' | Contribution: ' + fmt(values.inter.contribution) + '%',
+          'MDCAT: ' + values.mdcat.obtained + '/' + values.mdcat.total + ' | Contribution: ' + fmt(values.mdcat.contribution) + '%',
+          'Total Aggregate: ' + fmt(aggregate) + '%',
+          'Formula used: Matric 10% + Intermediate 40% + MDCAT 50%.'
+        ].join('\n');
+
+        result.classList.add('show');
+        document.getElementById('copyStatus').textContent = '';
+        result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+
+      form.addEventListener('reset', () => {
+        clearErrors();
+        result.classList.remove('show');
+        lastSummary = '';
+        document.getElementById('copyStatus').textContent = '';
+        fields.forEach(field => {
+          document.getElementById(field.key + 'Bar').style.width = '0%';
+        });
+      });
+
+      document.getElementById('editButton').addEventListener('click', () => {
+        document.getElementById('matricObtained').focus();
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+
+      document.getElementById('copyButton').addEventListener('click', async () => {
+        if (!lastSummary) return;
+        const status = document.getElementById('copyStatus');
+        try {
+          await navigator.clipboard.writeText(lastSummary);
+          status.textContent = 'Result copied! Ab aap isay kahin bhi paste kar sakte hain.';
+        } catch (error) {
+          const textarea = document.createElement('textarea');
+          textarea.value = lastSummary;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          const copied = document.execCommand('copy');
+          textarea.remove();
+          status.textContent = copied ? 'Result copied! Ab aap isay kahin bhi paste kar sakte hain.' : 'Copy nahi ho saka — result ko manually select karke copy karein.';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
